@@ -131,11 +131,13 @@ public class EdScreenRecorderPlugin implements FlutterPlugin, ActivityAware, Met
                 break;
             case "pauseRecordScreen":
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    Log.d("pauseRecordScreen:", "Pausing screen recording");
                     hbRecorder.pauseScreenRecording();
                 }
                 break;
             case "resumeRecordScreen":
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    Log.d("resumeRecordScreen:", "Resuming screen recording");
                     hbRecorder.resumeScreenRecording();
                 }
                 break;
