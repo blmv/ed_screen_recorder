@@ -53,8 +53,3 @@ android {
 flutter {
     source '../..'
 }
-
-dependencies {
-    implementation 'com.github.PickleCubeSoftwareLtd:HBRecorder:-SNAPSHOT'
-    implementation 'androidx.appcompat:appcompat:1.5.1'
-}

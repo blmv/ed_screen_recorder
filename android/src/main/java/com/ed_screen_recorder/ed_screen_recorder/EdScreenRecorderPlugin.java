@@ -37,7 +37,7 @@ import io.flutter.plugin.common.PluginRegistry;
  */
 public class EdScreenRecorderPlugin implements FlutterPlugin, ActivityAware, MethodCallHandler,
         PluginRegistry.RequestPermissionsResultListener,
-        PluginRegistry.ActivityResultListener, HBRecorderListener {
+        PluginRegistry.ActivityResultListener {
 
     private static final int SCREEN_RECORD_REQUEST_CODE = 777;
     Result flutterResult;
@@ -60,10 +60,12 @@ public class EdScreenRecorderPlugin implements FlutterPlugin, ActivityAware, Met
     private HBRecorder hbRecorder;
     private Intent permissionResultData = null;
 
+    final private HBRecorderListener listener = new RecorderListener(this);
+
     @Override
     public void onAttachedToEngine(@NonNull FlutterPluginBinding binding) {
         this.flutterPluginBinding = binding;
-        hbRecorder = new HBRecorder(flutterPluginBinding.getApplicationContext(), this);
+        hbRecorder = new HBRecorder(flutterPluginBinding.getApplicationContext(), listener);
     }
 
     @Override
@@ -176,7 +178,6 @@ public class EdScreenRecorderPlugin implements FlutterPlugin, ActivityAware, Met
         channel.setMethodCallHandler(this);
     }
 
-    @Override
     public void HBRecorderOnStart() {
 
         Log.e("Video Start:", "Start called");
@@ -197,7 +198,6 @@ public class EdScreenRecorderPlugin implements FlutterPlugin, ActivityAware, Met
         flutterResult.success(jsonObj.toString());
     }
 
-    @Override
     public void HBRecorderOnComplete() {
         Log.e("Video Complete:", "Complete called");
         Map<Object, Object> dataMap = new HashMap<>();
@@ -221,8 +221,7 @@ public class EdScreenRecorderPlugin implements FlutterPlugin, ActivityAware, Met
         }
     }
 
-    @Override
-    public void HBRecorderOnError(int errorCode, String reason) {
+    public void HBRecorderOnError(String reason) {
         Log.e("Video Error:", reason);
     }
 
