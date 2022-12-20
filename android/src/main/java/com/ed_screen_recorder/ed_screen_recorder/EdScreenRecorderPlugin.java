@@ -10,13 +10,11 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 
 import com.hbisoft.hbrecorder.HBRecorder;
-import com.hbisoft.hbrecorder.HBRecorderCodecInfo;
 import com.hbisoft.hbrecorder.HBRecorderListener;
 
 import org.json.JSONObject;
 
 import java.io.File;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -32,47 +30,40 @@ import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.PluginRegistry;
-import io.flutter.plugin.common.PluginRegistry.Registrar;
 
-/** EdScreenRecorderPlugin */
+
+/**
+ * EdScreenRecorderPlugin
+ */
 public class EdScreenRecorderPlugin implements FlutterPlugin, ActivityAware, MethodCallHandler,
         PluginRegistry.RequestPermissionsResultListener,
         PluginRegistry.ActivityResultListener, HBRecorderListener {
 
-    private FlutterPluginBinding flutterPluginBinding;
-    private ActivityPluginBinding activityPluginBinding;
+    private static final int SCREEN_RECORD_REQUEST_CODE = 777;
     Result flutterResult;
     Activity activity;
-    private MethodChannel channel;
-    private static final int SCREEN_RECORD_REQUEST_CODE = 777;
-    private HBRecorder hbRecorder;
     boolean isAudioEnabled;
     String fileName;
     String dirPathToSave;
     boolean addTimeCode;
     String filePath;
-    int videoFrame;
-    int videoBitrate;
+    Integer videoFrame;
+    Integer videoBitrate;
     String fileOutputFormat;
     String fileExtension;
     boolean success;
     String videoHash;
-    long startDate;
-    long endDate;
+    Long startDate;
+    Long endDate;
+    private FlutterPluginBinding flutterPluginBinding;
+    private ActivityPluginBinding activityPluginBinding;
+    private HBRecorder hbRecorder;
     private Intent permissionResultData = null;
-
-    public static void registerWith(Registrar registrar) {
-        final EdScreenRecorderPlugin instance = new EdScreenRecorderPlugin();
-        instance.setupChannels(registrar.messenger(), registrar.activity());
-        registrar.addActivityResultListener(instance);
-        registrar.addRequestPermissionsResultListener(instance);
-    }
 
     @Override
     public void onAttachedToEngine(@NonNull FlutterPluginBinding binding) {
         this.flutterPluginBinding = binding;
         hbRecorder = new HBRecorder(flutterPluginBinding.getApplicationContext(), this);
-        HBRecorderCodecInfo hbRecorderCodecInfo = new HBRecorderCodecInfo();
     }
 
     @Override
@@ -102,51 +93,57 @@ public class EdScreenRecorderPlugin implements FlutterPlugin, ActivityAware, Met
     @Override
     public void onMethodCall(@NonNull MethodCall call, @NonNull Result result) {
         this.flutterResult = result;
-        if (call.method.equals("startRecordScreen")) {
-            try {
-                isAudioEnabled = call.argument("audioenable");
-                fileName = call.argument("filename");
-                dirPathToSave = call.argument("dirpathtosave");
-                addTimeCode = call.argument("addtimecode");
-                videoFrame = call.argument("videoframe");
-                videoBitrate = call.argument("videobitrate");
-                fileOutputFormat = call.argument("fileoutputformat");
-                fileExtension = call.argument("fileextension");
-                videoHash = call.argument("videohash");
-                startDate = call.argument("startdate");
-                customSettings(videoFrame, videoBitrate, fileOutputFormat, addTimeCode, fileName);
-                if (dirPathToSave != null) {
-                    System.out.println(">>>>>>>>>>> 1");
-                    setOutputPath(addTimeCode, fileName, dirPathToSave);
+        switch (call.method) {
+            case "startRecordScreen":
+                try {
+                    isAudioEnabled = Boolean.TRUE.equals(call.argument("audioenable"));
+                    fileName = call.argument("filename");
+                    dirPathToSave = call.argument("dirpathtosave");
+                    addTimeCode = Boolean.TRUE.equals(call.argument("addtimecode"));
+                    videoFrame = call.argument("videoframe");
+                    videoBitrate = call.argument("videobitrate");
+                    fileOutputFormat = call.argument("fileoutputformat");
+                    fileExtension = call.argument("fileextension");
+                    videoHash = call.argument("videohash");
+                    startDate = call.argument("startdate");
+                    customSettings(videoFrame, videoBitrate, fileOutputFormat, addTimeCode, fileName);
+                    if (dirPathToSave != null) {
+                        System.out.println(">>>>>>>>>>> 1");
+                        setOutputPath(addTimeCode, fileName, dirPathToSave);
+                    }
+                    success = startRecordingScreen();
+                } catch (Exception e) {
+                    Map<Object, Object> dataMap = new HashMap<>();
+                    dataMap.put("success", false);
+                    dataMap.put("isProgress", false);
+                    dataMap.put("file", "");
+                    dataMap.put("eventname", "startRecordScreen Error");
+                    dataMap.put("message", e.getMessage());
+                    dataMap.put("videohash", videoHash);
+                    dataMap.put("startdate", startDate);
+                    dataMap.put("enddate", endDate);
+                    JSONObject jsonObj = new JSONObject(dataMap);
+                    result.success(jsonObj.toString());
+                    System.out.println("Error: " + e.getMessage());
                 }
-                success = startRecordingScreen();
-            } catch (Exception e) {
-                Map<Object, Object> dataMap = new HashMap<Object, Object>();
-                dataMap.put("success", false);
-                dataMap.put("isProgress", false);
-                dataMap.put("file", "");
-                dataMap.put("eventname", "startRecordScreen Error");
-                dataMap.put("message", e.getMessage());
-                dataMap.put("videohash", videoHash);
-                dataMap.put("startdate", startDate);
-                dataMap.put("enddate", endDate);
-                JSONObject jsonObj = new JSONObject(dataMap);
-                result.success(jsonObj.toString());
-                System.out.println("Error: " + e.getMessage());
-            }
-        } else if (call.method.equals("pauseRecordScreen")) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                hbRecorder.pauseScreenRecording();
-            }
-        } else if (call.method.equals("resumeRecordScreen")) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                hbRecorder.resumeScreenRecording();
-            }
-        } else if (call.method.equals("stopRecordScreen")) {
-            endDate = call.argument("enddate");
-            hbRecorder.stopScreenRecording();
-        } else {
-            result.notImplemented();
+                break;
+            case "pauseRecordScreen":
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    hbRecorder.pauseScreenRecording();
+                }
+                break;
+            case "resumeRecordScreen":
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    hbRecorder.resumeScreenRecording();
+                }
+                break;
+            case "stopRecordScreen":
+                endDate = call.argument("enddate");
+                hbRecorder.stopScreenRecording();
+                break;
+            default:
+                result.notImplemented();
+                break;
         }
     }
 
@@ -165,7 +162,7 @@ public class EdScreenRecorderPlugin implements FlutterPlugin, ActivityAware, Met
     }
 
     @Override
-    public boolean onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+    public boolean onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         return false;
     }
 
@@ -175,7 +172,7 @@ public class EdScreenRecorderPlugin implements FlutterPlugin, ActivityAware, Met
             activityPluginBinding.addRequestPermissionsResultListener(this);
         }
         this.activity = activity;
-        channel = new MethodChannel(messenger, "ed_screen_recorder");
+        MethodChannel channel = new MethodChannel(messenger, "ed_screen_recorder");
         channel.setMethodCallHandler(this);
     }
 
@@ -183,7 +180,7 @@ public class EdScreenRecorderPlugin implements FlutterPlugin, ActivityAware, Met
     public void HBRecorderOnStart() {
 
         Log.e("Video Start:", "Start called");
-        Map<Object, Object> dataMap = new HashMap<Object, Object>();
+        Map<Object, Object> dataMap = new HashMap<>();
         dataMap.put("success", success);
         dataMap.put("isProgress", true);
         if (dirPathToSave != null) {
@@ -203,7 +200,7 @@ public class EdScreenRecorderPlugin implements FlutterPlugin, ActivityAware, Met
     @Override
     public void HBRecorderOnComplete() {
         Log.e("Video Complete:", "Complete called");
-        Map<Object, Object> dataMap = new HashMap<Object, Object>();
+        Map<Object, Object> dataMap = new HashMap<>();
         dataMap.put("success", success);
         dataMap.put("isProgress", false);
         if (dirPathToSave != null) {
@@ -231,7 +228,7 @@ public class EdScreenRecorderPlugin implements FlutterPlugin, ActivityAware, Met
 
     private Boolean startRecordingScreen() {
         try {
-            if(permissionResultData == null) {
+            if (permissionResultData == null) {
                 hbRecorder.enableCustomSettings();
                 MediaProjectionManager mediaProjectionManager = (MediaProjectionManager) flutterPluginBinding
                         .getApplicationContext().getSystemService(Context.MEDIA_PROJECTION_SERVICE);
@@ -250,23 +247,29 @@ public class EdScreenRecorderPlugin implements FlutterPlugin, ActivityAware, Met
         }
     }
 
-    private void customSettings(int videoFrame, int videoBitrate, String fileOutputFormat, boolean addTimeCode,
-            String fileName) {
+    private void customSettings(Integer videoFrame, Integer videoBitrate, String fileOutputFormat, boolean addTimeCode,
+                                String fileName) {
         hbRecorder.isAudioEnabled(isAudioEnabled);
         hbRecorder.setAudioSource("DEFAULT");
         hbRecorder.setVideoEncoder("DEFAULT");
-        hbRecorder.setVideoFrameRate(videoFrame);
-        hbRecorder.setVideoBitrate(videoBitrate);
-        hbRecorder.setOutputFormat(fileOutputFormat);
+        if (fileOutputFormat != null) {
+            hbRecorder.setOutputFormat(fileOutputFormat);
+        }
+        if (videoFrame != null) {
+            hbRecorder.setVideoFrameRate(videoFrame);
+        }
+        if (videoBitrate != null) {
+            hbRecorder.setVideoBitrate(videoBitrate);
+        }
         if (dirPathToSave == null) {
             System.out.println(">>>>>>>>>>> 2" + fileName);
             hbRecorder.setFileName(generateFileName(fileName, addTimeCode));
         }
     }
 
-    private void setOutputPath(boolean addTimeCode, String fileName, String dirPathToSave) throws IOException {
+    private void setOutputPath(boolean addTimeCode, String fileName, String dirPathToSave) {
         hbRecorder.setFileName(generateFileName(fileName, addTimeCode));
-        if (dirPathToSave != null && dirPathToSave != "") {
+        if (dirPathToSave != null && !dirPathToSave.equals("")) {
             File dirFile = new File(dirPathToSave);
             hbRecorder.setOutputPath(dirFile.getAbsolutePath());
             filePath = dirFile.getAbsolutePath() + "/" + generateFileName(fileName, addTimeCode);
