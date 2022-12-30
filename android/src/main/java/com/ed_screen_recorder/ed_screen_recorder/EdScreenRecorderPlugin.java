@@ -71,6 +71,9 @@ public class EdScreenRecorderPlugin implements FlutterPlugin, ActivityAware, Met
     @Override
     public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
         this.flutterPluginBinding = null;
+        if(hbRecorder != null) {
+            hbRecorder.stopScreenRecording();
+        }
     }
 
     @Override
