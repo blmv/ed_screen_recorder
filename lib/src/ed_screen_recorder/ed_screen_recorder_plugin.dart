@@ -10,8 +10,9 @@ import '../models/record_output_model.dart';
 class EdScreenRecorder {
   static const MethodChannel _channel = MethodChannel('ed_screen_recorder');
 
-  Future<bool> isAvailable() {
-    return _channel.invokeMethod('isAvailable');
+  Future<bool> isAvailable() async {
+    final isAvailable = await _channel.invokeMethod<bool>('isAvailable');
+    return isAvailable != null && isAvailable;
   }
 
   /// [startRecordScreen] function takes the necessary parameters. The user can change all of these according to himself.
