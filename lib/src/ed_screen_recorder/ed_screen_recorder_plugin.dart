@@ -67,8 +67,6 @@ class EdScreenRecorder {
       File: ${formatResponse.file}
       Event Name: ${formatResponse.eventName}
       Progressing: ${formatResponse.isProgress}
-      Message: ${formatResponse.message}
-      Success: ${formatResponse.success}
       Video Hash: ${formatResponse.videoHash}
       Start Date: ${formatResponse.startDate}
       End Date: ${formatResponse.endDate}
@@ -94,8 +92,6 @@ class EdScreenRecorder {
       File: ${formatResponse.file} 
       Event Name: ${formatResponse.eventName}  
       Progressing: ${formatResponse.isProgress} 
-      Message: ${formatResponse.message} 
-      Success: ${formatResponse.success} 
       Video Hash: ${formatResponse.videoHash} 
       Start Date: ${formatResponse.startDate} 
       End Date: ${formatResponse.endDate}
