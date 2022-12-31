@@ -249,20 +249,20 @@ public class SwiftEdScreenRecorderPlugin: NSObject, FlutterPlugin {
         if(recorder.isRecording){
             if #available(iOS 11.0, *) {
                 recorder.stopCapture( handler: { (error) in
-                    stoppedHandler(error);
+                    self.videoWriterInput?.markAsFinished();
+                    if(self.isAudioEnabled) {
+                        self.audioInput?.markAsFinished();
+                    }
+                    
+                    self.videoWriter?.finishWriting {
+                        stoppedHandler(nil);
+                    }
                 })
             } else {
                 stoppedHandler(nil);
             }
             
-            self.videoWriterInput?.markAsFinished();
-            if(self.isAudioEnabled) {
-                self.audioInput?.markAsFinished();
-            }
-            
-            self.videoWriter?.finishWriting {
-                stoppedHandler(nil);
-            }
+
         }else{
             stoppedHandler(nil);
         }
