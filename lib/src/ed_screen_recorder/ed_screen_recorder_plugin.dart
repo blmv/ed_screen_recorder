@@ -11,8 +11,17 @@ class EdScreenRecorder {
   static const MethodChannel _channel = MethodChannel('ed_screen_recorder');
 
   Future<bool> isAvailable() async {
-    final isAvailable = await _channel.invokeMethod<bool>('isAvailable');
+    final isAvailable = await _channel.invokeMethod<bool>(
+      'isAvailable',
+    );
     return isAvailable != null && isAvailable;
+  }
+
+  Future<bool> requestPermission() async {
+    final hasPermission = await _channel.invokeMethod<bool>(
+      'requestPermission',
+    );
+    return hasPermission != null && hasPermission;
   }
 
   /// [startRecordScreen] function takes the necessary parameters. The user can change all of these according to himself.

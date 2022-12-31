@@ -61,6 +61,7 @@ public class EdScreenRecorderPlugin implements FlutterPlugin, ActivityAware, Met
     private ActivityPluginBinding activityPluginBinding;
     private HBRecorder hbRecorder;
     private Intent permissionResultData = null;
+    private Boolean startRecordingOnPermissionResult;
 
     @Override
     public void onAttachedToEngine(@NonNull FlutterPluginBinding binding) {
@@ -101,6 +102,9 @@ public class EdScreenRecorderPlugin implements FlutterPlugin, ActivityAware, Met
         switch (call.method) {
             case "isAvailable":
                 result.success(isAvailable());
+                break;
+            case "requestPermission":
+                requestPermission();
                 break;
             case "startRecordScreen":
                 try {
@@ -161,12 +165,16 @@ public class EdScreenRecorderPlugin implements FlutterPlugin, ActivityAware, Met
     public boolean onActivityResult(int requestCode, int resultCode, Intent data) {
 
         if (requestCode == SCREEN_RECORD_REQUEST_CODE) {
-            if (resultCode == Activity.RESULT_OK) {
-                if (data != null) {
-                    permissionResultData = data;
+            boolean hasPermission = resultCode == Activity.RESULT_OK;
+            if (hasPermission) {
+                permissionResultData = data;
+                if (startRecordingOnPermissionResult) {
                     hbRecorder.startScreenRecording(permissionResultData, Activity.RESULT_OK);
+                    return true;
                 }
             }
+
+            flutterResult.success(hasPermission);
         }
         return true;
     }
@@ -249,10 +257,33 @@ public class EdScreenRecorderPlugin implements FlutterPlugin, ActivityAware, Met
         }
     }
 
+    private void requestPermission() {
+        if(!isAvailable()) {
+            flutterResult.error("Not Available", "Recording not available", null);
+            return;
+        }
+
+        if(permissionResultData != null) {
+            flutterResult.success(true);
+            return;
+        }
+
+        startRecordingOnPermissionResult = false;
+
+        hbRecorder.enableCustomSettings();
+
+        Intent permissionIntent = mediaProjectionManager.createScreenCaptureIntent();
+        activity.startActivityForResult(permissionIntent, SCREEN_RECORD_REQUEST_CODE);
+    }
+
+
     private Boolean startRecordingScreen() {
         if (!isAvailable()) {
+            flutterResult.error("Not Available", "Recording not available", null);
             return false;
         }
+
+        startRecordingOnPermissionResult = true;
 
         try {
             if (permissionResultData == null) {

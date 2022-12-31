@@ -37,14 +37,28 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  EdScreenRecorder? screenRecorder;
+  late final EdScreenRecorder screenRecorder;
   Map<String, dynamic>? _response;
   bool inProgress = false;
+
+  bool? isAvailable;
+  bool? hasPermission;
+
+  Future<void> initialise() async {
+    isAvailable = await screenRecorder.isAvailable();
+    setState(() {});
+  }
 
   @override
   void initState() {
     super.initState();
     screenRecorder = EdScreenRecorder();
+    initialise();
+  }
+
+  Future<void> _requestPermission() async {
+    hasPermission = await screenRecorder.requestPermission();
+    setState(() {});
   }
 
   Future<void> startRecord({required String fileName}) async {
@@ -70,7 +84,7 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> stopRecord() async {
     try {
-      var stopResponse = await screenRecorder?.stopRecord();
+      var stopResponse = await screenRecorder.stopRecord();
       setState(() {
         _response = stopResponse;
       });
@@ -83,7 +97,7 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> pauseRecord() async {
     try {
-      await screenRecorder?.pauseRecord();
+      await screenRecorder.pauseRecord();
     } on PlatformException {
       kDebugMode
           ? debugPrint("Error: An error occurred while pause recording.")
@@ -93,7 +107,7 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> resumeRecord() async {
     try {
-      await screenRecorder?.resumeRecord();
+      await screenRecorder.resumeRecord();
     } on PlatformException {
       kDebugMode
           ? debugPrint("Error: An error occurred while resume recording.")
@@ -107,32 +121,65 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: const Text("Screen Recording Debug"),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text("File: ${(_response?['file'] as File?)?.path}"),
-            Text("Status: ${(_response?['success']).toString()}"),
-            Text("Event: ${_response?['eventname']}"),
-            Text("Progress: ${(_response?['progressing']).toString()}"),
-            Text("Message: ${_response?['message']}"),
-            Text("Video Hash: ${_response?['videohash']}"),
-            Text("Start Date: ${(_response?['startdate']).toString()}"),
-            Text("End Date: ${(_response?['enddate']).toString()}"),
-            ElevatedButton(
-                onPressed: () => startRecord(fileName: "eren"),
-                child: const Text('START RECORD')),
-            ElevatedButton(
-                onPressed: () => resumeRecord(),
-                child: const Text('RESUME RECORD')),
-            ElevatedButton(
-                onPressed: () => pauseRecord(),
-                child: const Text('PAUSE RECORD')),
-            ElevatedButton(
-                onPressed: () => stopRecord(),
-                child: const Text('STOP RECORD')),
-          ],
+      body: _buildBody(context),
+    );
+  }
+
+  Widget _buildBody(BuildContext context) {
+    final available = isAvailable;
+    final permission = hasPermission;
+
+    if (available == null) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+
+    if (!available) {
+      return const Center(
+        child: Text('Recorder not supported'),
+      );
+    }
+
+    if (permission == null) {
+      return Center(
+        child: ElevatedButton(
+          onPressed: _requestPermission,
+          child: const Text('Request Permission'),
         ),
+      );
+    }
+
+    if (!permission) {
+      return const Center(
+        child: Text('Invalid permission'),
+      );
+    }
+
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text("File: ${(_response?['file'] as File?)?.path}"),
+          Text("Status: ${(_response?['success']).toString()}"),
+          Text("Event: ${_response?['eventname']}"),
+          Text("Progress: ${(_response?['progressing']).toString()}"),
+          Text("Message: ${_response?['message']}"),
+          Text("Video Hash: ${_response?['videohash']}"),
+          Text("Start Date: ${(_response?['startdate']).toString()}"),
+          Text("End Date: ${(_response?['enddate']).toString()}"),
+          ElevatedButton(
+              onPressed: () => startRecord(fileName: "eren"),
+              child: const Text('START RECORD')),
+          ElevatedButton(
+              onPressed: () => resumeRecord(),
+              child: const Text('RESUME RECORD')),
+          ElevatedButton(
+              onPressed: () => pauseRecord(),
+              child: const Text('PAUSE RECORD')),
+          ElevatedButton(
+              onPressed: () => stopRecord(), child: const Text('STOP RECORD')),
+        ],
       ),
     );
   }
