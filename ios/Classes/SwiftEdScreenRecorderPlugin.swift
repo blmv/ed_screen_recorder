@@ -217,7 +217,7 @@ public class SwiftEdScreenRecorderPlugin: NSObject, FlutterPlugin {
                             startedHandler?(nil);
                         }else if self.videoWriter?.status == AVAssetWriter.Status.writing {
                             if (self.videoWriterInput?.isReadyForMoreMediaData == true) {
-                                if  self.videoWriterInput?.append(cmSampleBuffer) == false {
+                                if self.videoWriterInput?.append(cmSampleBuffer) == false {
                                     print("Problems writing video")
                                     startedHandler?(NSError(domain: "", code: 500));
                                 }
@@ -226,7 +226,6 @@ public class SwiftEdScreenRecorderPlugin: NSObject, FlutterPlugin {
                     case RPSampleBufferType.audioApp:
                         if(self.isAudioEnabled){
                             if self.audioInput?.isReadyForMoreMediaData == true {
-                                print("starting audio....");
                                 if self.audioInput?.append(cmSampleBuffer) == false {
                                     print("Problems writing audio")
                                 }
