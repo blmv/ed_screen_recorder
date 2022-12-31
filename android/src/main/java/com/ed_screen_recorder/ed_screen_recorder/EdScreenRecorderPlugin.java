@@ -40,6 +40,7 @@ public class EdScreenRecorderPlugin implements FlutterPlugin, ActivityAware, Met
         PluginRegistry.ActivityResultListener {
 
     private static final int SCREEN_RECORD_REQUEST_CODE = 777;
+    final private HBRecorderListener listener = new RecorderListener(this);
     Result flutterResult;
     Activity activity;
     boolean isAudioEnabled;
@@ -55,12 +56,11 @@ public class EdScreenRecorderPlugin implements FlutterPlugin, ActivityAware, Met
     String videoHash;
     Long startDate;
     Long endDate;
+    private MediaProjectionManager mediaProjectionManager;
     private FlutterPluginBinding flutterPluginBinding;
     private ActivityPluginBinding activityPluginBinding;
     private HBRecorder hbRecorder;
     private Intent permissionResultData = null;
-
-    final private HBRecorderListener listener = new RecorderListener(this);
 
     @Override
     public void onAttachedToEngine(@NonNull FlutterPluginBinding binding) {
@@ -71,7 +71,7 @@ public class EdScreenRecorderPlugin implements FlutterPlugin, ActivityAware, Met
     @Override
     public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
         this.flutterPluginBinding = null;
-        if(hbRecorder != null) {
+        if (hbRecorder != null) {
             hbRecorder.stopScreenRecording();
         }
     }
@@ -99,6 +99,9 @@ public class EdScreenRecorderPlugin implements FlutterPlugin, ActivityAware, Met
     public void onMethodCall(@NonNull MethodCall call, @NonNull Result result) {
         this.flutterResult = result;
         switch (call.method) {
+            case "isAvailable":
+                result.success(isAvailable());
+                break;
             case "startRecordScreen":
                 try {
                     isAudioEnabled = Boolean.TRUE.equals(call.argument("audioenable"));
@@ -230,15 +233,32 @@ public class EdScreenRecorderPlugin implements FlutterPlugin, ActivityAware, Met
         Log.e("Video Error:", reason);
     }
 
+    private Boolean isAvailable() {
+        if (mediaProjectionManager != null) {
+            return true;
+        }
+
+        try {
+            mediaProjectionManager = (MediaProjectionManager) flutterPluginBinding
+                    .getApplicationContext().getSystemService(Context.MEDIA_PROJECTION_SERVICE);
+
+            return mediaProjectionManager != null;
+        } catch (Exception e) {
+            System.out.println("isAvailable Error:" + e.getMessage());
+            return false;
+        }
+    }
+
     private Boolean startRecordingScreen() {
+        if (!isAvailable()) {
+            return false;
+        }
+
         try {
             if (permissionResultData == null) {
                 hbRecorder.enableCustomSettings();
-                MediaProjectionManager mediaProjectionManager = (MediaProjectionManager) flutterPluginBinding
-                        .getApplicationContext().getSystemService(Context.MEDIA_PROJECTION_SERVICE);
-                Intent permissionIntent = mediaProjectionManager != null
-                        ? mediaProjectionManager.createScreenCaptureIntent()
-                        : null;
+
+                Intent permissionIntent = mediaProjectionManager.createScreenCaptureIntent();
                 activity.startActivityForResult(permissionIntent, SCREEN_RECORD_REQUEST_CODE);
             } else {
                 hbRecorder.startScreenRecording(permissionResultData, Activity.RESULT_OK);
@@ -246,7 +266,7 @@ public class EdScreenRecorderPlugin implements FlutterPlugin, ActivityAware, Met
 
             return true;
         } catch (Exception e) {
-            System.out.println("Error:" + e.getMessage());
+            System.out.println("startRecordingScreen Error:" + e.getMessage());
             return false;
         }
     }

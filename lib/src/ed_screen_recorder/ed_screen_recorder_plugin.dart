@@ -10,6 +10,10 @@ import '../models/record_output_model.dart';
 class EdScreenRecorder {
   static const MethodChannel _channel = MethodChannel('ed_screen_recorder');
 
+  Future<bool> isAvailable() {
+    return _channel.invokeMethod('isAvailable');
+  }
+
   /// [startRecordScreen] function takes the necessary parameters. The user can change all of these according to himself.
   /// Thanks to the [uuid] and [videoHash] variables, we can detect that each recorded video is unique from each other.
   /// After the process, we get a model result called [RecordOutput].
