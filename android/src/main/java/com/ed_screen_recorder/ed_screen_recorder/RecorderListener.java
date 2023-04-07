@@ -23,4 +23,16 @@ public class RecorderListener implements HBRecorderListener {
     public void HBRecorderOnError(int i, String s) {
         plugin.HBRecorderOnError(s);
     }
+
+    @Override
+    public void HBRecorderOnPause() {
+        // I don't think this is needed, it's just a callback for when HBRecorder decides to pause
+        // if we were to recall onPause, we'll be in a loop.
+    }
+
+    @Override
+    public void HBRecorderOnResume() {
+        // I don't think this is needed, it's just a callback for when HBRecorder decides to pause
+        // if we were to recall onResume, we'll be in a loop.
+    }
 }
