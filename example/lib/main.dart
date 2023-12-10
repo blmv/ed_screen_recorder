@@ -65,7 +65,7 @@ class _HomePageState extends State<HomePage> {
     Directory? tempDir = await getApplicationDocumentsDirectory();
     String? tempPath = tempDir.path;
     try {
-      var startResponse = await screenRecorder?.startRecordScreen(
+      var startResponse = await screenRecorder.startRecordScreen(
         fileName: "Eren",
         //Optional. It will save the video there when you give the file path with whatever you want.
         //If you leave it blank, the Android operating system will save it to the gallery.
