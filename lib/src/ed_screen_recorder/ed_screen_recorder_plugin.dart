@@ -37,6 +37,8 @@ class EdScreenRecorder {
     String? fileOutputFormat,
     int? videoBitrate,
     int? videoFrame,
+    int? width,
+    int? height,
   }) async {
     var uuid = const Uuid();
     String videoHash = uuid.v1().replaceAll('-', '');
@@ -57,6 +59,8 @@ class EdScreenRecorder {
           "fileoutputformat": fileOutputFormat,
         if (videoFrame != null) "videoframe": videoFrame,
         if (videoBitrate != null) "videobitrate": videoBitrate,
+        if (width != null) "width": width,
+        if (height != null) "height": height,
       },
     );
 

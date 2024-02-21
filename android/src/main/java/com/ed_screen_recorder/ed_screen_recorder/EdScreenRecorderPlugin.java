@@ -118,7 +118,9 @@ public class EdScreenRecorderPlugin implements FlutterPlugin, ActivityAware, Met
                     fileExtension = call.argument("fileextension");
                     videoHash = call.argument("videohash");
                     startDate = call.argument("startdate");
-                    customSettings(videoFrame, videoBitrate, fileOutputFormat, addTimeCode, fileName);
+                    Integer width = call.argument("width");
+                    Integer height = call.argument("height");
+                    customSettings(videoFrame, videoBitrate, fileOutputFormat, addTimeCode, fileName, width, height);
                     if (dirPathToSave != null) {
                         System.out.println(">>>>>>>>>>> 1");
                         setOutputPath(addTimeCode, fileName, dirPathToSave);
@@ -304,7 +306,7 @@ public class EdScreenRecorderPlugin implements FlutterPlugin, ActivityAware, Met
     }
 
     private void customSettings(Integer videoFrame, Integer videoBitrate, String fileOutputFormat, boolean addTimeCode,
-                                String fileName) {
+                                String fileName, Integer width, Integer height) {
         hbRecorder.isAudioEnabled(isAudioEnabled);
         hbRecorder.setAudioSource("DEFAULT");
         hbRecorder.setVideoEncoder("DEFAULT");
@@ -320,6 +322,9 @@ public class EdScreenRecorderPlugin implements FlutterPlugin, ActivityAware, Met
         if (dirPathToSave == null) {
             System.out.println(">>>>>>>>>>> 2" + fileName);
             hbRecorder.setFileName(generateFileName(fileName, addTimeCode));
+        }
+        if (width != null && height != null) {
+            hbRecorder.setScreenDimensions(width, height);
         }
     }
 
