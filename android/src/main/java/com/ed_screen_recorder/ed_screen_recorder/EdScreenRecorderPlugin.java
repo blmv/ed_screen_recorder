@@ -263,10 +263,11 @@ public class EdScreenRecorderPlugin implements FlutterPlugin, ActivityAware, Met
             return;
         }
 
-        if(permissionResultData != null) {
-            flutterResult.success(true);
-            return;
-        }
+        // Android 14 forces to call createScreenCaptureIntent before every capture session
+//        if(permissionResultData != null) {
+//            flutterResult.success(true);
+//            return;
+//        }
 
         startRecordingOnPermissionResult = false;
 
